@@ -148,11 +148,12 @@ def svmByPackageDataMining(xList, yList):
 	
 	#SVM with kernel
 	decision_function = 'ovr'
-	clf_rbf = svm.SVC(decision_function_shape=decision_function, 	C=100.0, kernel='rbf',  			gamma=1e-7*4)
+	clf_rbf = svm.SVC(decision_function_shape=decision_function, 	C=100.0, kernel='rbf',  			gamma=1e-7*4.5)
 	#clf_sig = svm.SVC(decision_function_shape=decision_function, 	C=10.0, kernel='sigmoid',  		gamma=5, 		coef0=100.0)
 	#clf_pol = svm.SVC(decision_function_shape=decision_function, 	C=10.0, kernel='polynomial', 	gamma=5,		coef0=100.0, degree=4)
 	clf_lin = svm.SVC(decision_function_shape=decision_function, 	C=2.0, kernel='linear')
-
+	print(clf_rbf)
+	
 	#cross validation 
 	print("rbf cross validation")
 	score_rbf = cross_validation.cross_val_score(clf_rbf, xList, yList, cv=3)
@@ -177,7 +178,10 @@ def PCAReduction(xList, componentNum):
 	pca = PCA(n_components=componentNum)
 	
 	X = np.array(xList)
-	newX = pca.fit_transform(X)
+	#newX = pca.fit_transform(X)
+	pca.fit(X)
+	newX = pca.transform(X)
+	
 
 	newXList = []
 	for x in newX:
@@ -185,7 +189,31 @@ def PCAReduction(xList, componentNum):
 		newXList.append(tmpList)
 	return newXList
 
+def PCAReduction_pair(xList, xTestList, componentNum):
+
+	#kpca = KernelPCA(kernel="linear",  n_components=componentNum)
 	
+	pca = PCA(n_components=componentNum)
+	
+	X = np.array(xList)
+	XTest = np.array(xTestList)
+	#newX = pca.fit_transform(X)
+	pca.fit(X)
+	newX = pca.transform(X)
+	newXTest = pca.transform(XTest)
+	
+
+	newXList = []
+	for x in newX:
+		tmpList = [ i.real for i in x]
+		newXList.append(tmpList)
+		
+	newXTestList = []
+	for x in newXTest:
+		tmpList = [ i.real for i in x]
+		newXTestList.append(tmpList)
+		
+	return newXList, newXTestList
 
 def PCAfunction_single(vecList, topN):
 	
@@ -314,8 +342,8 @@ def PCAParameterSearch(xList, yList):
 	comMax = 0
 	category = ""
 	
-	n_components = 0
-	while n_components < -1:
+	n_components = 53
+	while n_components < 61:
 		#newXList = PCAReduction(xList,n_components)
 		newXList = PCAfunction_single(xList,n_components)
 		score_rbf, score_lin = svmByPackageDataMining(newXList, yList)		
@@ -340,16 +368,16 @@ def PCAParameterSearch_addFeature(xList, yList, newXListFeatureList):
 	comMax = 0
 	category = ""
 	
-	n_components = 56
-	while n_components < 60:
+	n_components = 55
+	while n_components < 56:
 		#newXList = PCAReduction(xList,n_components)
 		xList = [xList[idx]+newXListFeatureList[idx] for idx in range(len(xList))]
-		#print(xList[0], xList[1])
+		print(xList[0])
 		#newXList = PCAfunction_single(xList,n_components)
 		newXList = PCAReduction(xList,n_components)
 		
 		#newXList = newXListFeatureList
-		#print(newXList[0], newXList[1])
+		print(newXList[0], newXList[1])
 		
 		score_rbf, score_lin = svmByPackageDataMining(newXList, yList)		
 		if score_rbf > scoreMax:
@@ -452,13 +480,12 @@ def svmTesting(xList, yList, testXList):
 
 #0.982380812226
 def addNonZeroNumberFeature(xList, listLen):
-	newFeature = []
 	for idx in range(listLen):
 		num = 0
 		for x in xList[idx]:
 			if x != 0:
 				num += 1
-		newFeature.append( [num] )
+		newFeature = [num]
 	return newFeature
 
 #0.982333196577
@@ -472,13 +499,14 @@ def addGreatNNumberFeature(xList, N, listLen):
 	return xList	
 
 def addEnergyFearture(xList, listLen):
+	featureList = []
 	for idx in range(listLen):
 		num = 0
 		for x in xList[idx]:
 			if x >  0:
 				num += int(x/60)
-		xList[idx].append(num)
-	return xList	
+		featureList.append([num])
+	return featureList	
 
 
 def addRowGreatN(xList, listLen, N):
@@ -496,6 +524,47 @@ def addRowGreatN(xList, listLen, N):
 	
 	return newFeatureList
 	
+
+
+def addRowGreatN_addN(xList, listLen, N):
+	newFeatureList = []
+	for idx in range(listLen):
+		tempList = xList[idx]
+		newFeature = [0 for i in range(28)]
+		num = 0
+		for i in range(len(tempList)):
+			if tempList[i] > N:
+				index = int(i/28)
+				newFeature[index] += 1
+				num += 1
+		newFeature = [ i*20 for i in newFeature]
+		newFeatureList.append(newFeature)
+		newFeatureList.append(num)
+	
+	return newFeatureList
+
+
+
+def addRowGreatN_addN_new(xList, listLen, N):
+	newFeatureList = []
+	for idx in range(listLen):
+		tempList = xList[idx]
+		newFeature = [0 for i in range(28*2)]
+		num = 0
+		for i in range(len(tempList)):
+			if tempList[i] > N:
+				index = int(i/28)
+				newFeature[index] += 1
+				newFeature[i%28+28] += 1;
+				num += 1
+		newFeature = [ i*20 for i in newFeature]
+		newFeatureList.append(newFeature)
+		newFeatureList.append(num)
+	
+	return newFeatureList
+
+
+
 def addColGreatN(xList, listLen, N):
 	newFeatureList = []
 	for idx in range(listLen):
@@ -507,35 +576,68 @@ def addColGreatN(xList, listLen, N):
 				newFeature[i%28] += 1;
 		newFeatureList.append(newFeature)
 	return newFeatureList
-	
+
+def addAreaMean(xList, listLen):
+	newFeatureList = []
+	nAreaLen = 14
+	nAreaNum = 28/nAreaLen
+	nAreaNum *= nAreaNum
+	for idx in range(listLen):
+		tempList = xList[idx]
+		newFeature = [0 for i in range(nAreaLen*nAreaLen)]
+		for i in range(len(tempList)):
+			if tempList[i] == 0:
+				continue
+			
+			rowIdx = int(i/28/(28/nAreaLen))
+			colIdx = int(i%28/(28/nAreaLen))
+			
+			#newFeature[rowIdx*nAreaLen + colIdx] += tempList[i];
+			newFeature[rowIdx*nAreaLen + colIdx] += 1;
+			
+		
+		#newFeature = [int(value/nAreaNum) for value in newFeature]
+		newFeature = [int(value*60) for value in newFeature]
+		newFeatureList.append(newFeature)
+		#print(newFeatureList)
+		#exit(0)
+	return newFeatureList	
 	
 def addFeatureMain(xList, testXList):
 	trainLen = len(xList)
 	testLen  = len(testXList)
 
 	##add number of non-zero feature as feature 
-	#newXListFeatureList = addNonZeroNumberFeature(xList, trainLen)
-	#newTestXListFeatureList = addNonZeroNumberFeature(testXList, testLen)
+	#newXListFeature = addNonZeroNumberFeature(xList, trainLen)
+	#newTestXListFeature = addNonZeroNumberFeature(testXList, testLen)
 	
 	## number of feature that great than N
-	#newXListFeatureList = addGreatNNumberFeature(xList, 10)
-	#newTestXListFeatureList = addGreatNNumberFeature(testXList, 10)
+	#newXListFeature = addGreatNNumberFeature(xList, 10)
+	#newTestXListFeature = addGreatNNumberFeature(testXList, 10)
 	
 	## add energy
-	#newXListFeatureList = addEnergyFearture(xList, trainLen)
-	#newTestXListFeatureList = addEnergyFearture(testXList, testLen)
+	# newXListFeature = addEnergyFearture(xList, trainLen)
+	# newTestXListFeature = addEnergyFearture(testXList, testLen)
 	
 	## add Row
-	newXListFeatureList = addRowGreatN(xList, trainLen, 0)
-	newTestXListFeatureList = addRowGreatN(testXList, testLen, 0)
+	#newXListFeature = addRowGreatN(xList, trainLen, 0)
+	#newTestXListFeature = addRowGreatN(testXList, testLen, 0)
+	#
+	### add Col
+	#newXListFeature = addColGreatN(xList, trainLen, 0)
+	#newTestXListFeature = addColGreatN(testXList, testLen, 0)	
+
+
+	#newXListFeature = addRowGreatN_addN(xList, trainLen, 0)
+	#newTestXListFeature = addRowGreatN_addN(testXList, testLen, 0)	
 	
-	## add Col
-	#newXListFeatureList = addColGreatN(xList, trainLen, 0)
-	#newTestXListFeatureList = addColGreatN(testXList, testLen, 0)	
+	newXListFeature = addAreaMean(xList, trainLen)
+	newTestXListFeature = addAreaMean(testXList, testLen)	
 	
-	print(newXListFeatureList[0], newXListFeatureList[1])
+	print(newXListFeature[0])
+	print(newXListFeature[1])
 	
-	return newXListFeatureList, newTestXListFeatureList
+	return newXListFeature, newTestXListFeature
 	
 	
 def outCSV(yList, outFile):
@@ -567,7 +669,7 @@ def main(argc, argv):
 	testXList, _testYList = testSet.exportDataToXYList()
 	print(len(testXList))
 	
-	pca_search = True
+	pca_search = False
 	
 	n_components = 55
 	
@@ -579,8 +681,12 @@ def main(argc, argv):
 		print("PCA ", n_components)
 	
 		#single PCA
-		xList, eginVector = PCAfunction_paired(xList, n_components)
-		testXList = doPCAwithEignvector(testXList, eginVector)
+		#xList, eginVector = PCAfunction_paired(xList, n_components)
+		#testXList = doPCAwithEignvector(testXList, eginVector)
+		xList = [xList[idx]+newXListFeatureList[idx] for idx in range(len(xList))]
+		testXList = [testXList[idx]+newTestXListFeatureList[idx] for idx in range(len(testXList))]
+		
+		xList, testXList = PCAReduction_pair(xList, testXList, n_components)
 		#
 
 		
@@ -608,13 +714,13 @@ def main(argc, argv):
 		print("Train.")
 		
 		#cross validation
-		score_rbf, score_lin = svmByPackageDataMining(xList, yList)
-		print(score_rbf, score_lin)
+		#score_rbf, score_lin = svmByPackageDataMining(xList, yList)
+		#print(score_rbf, score_lin)
 		
-		#testing
-		#outFile = "result.txt"
-		#result = svmTesting(xList, yList, testXList)
-		#outCSV(result, outFile)
+		##testing
+		outFile = "result.txt"
+		result = svmTesting(xList, yList, testXList)
+		outCSV(result, outFile)
 		
 		#mapList = rbfParameterSearch(xList, yList)
 

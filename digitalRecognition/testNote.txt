@@ -1,0 +1,10 @@
+55 0.982333196577
+rbf cross validation
+784 0.980785611475 0
+
+
+add number of non-zero feature
+0.982380812226 , 0.98414
+
+add add row feature
+55 0.982523648969 X20
