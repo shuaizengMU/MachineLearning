@@ -12,7 +12,6 @@ from sklearn import metrics
 from sklearn import datasets
 
 from mpl_toolkits.mplot3d.axes3d import Axes3D
-import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import cm
 from mpl_toolkits.mplot3d.axes3d import get_test_data
@@ -21,6 +20,12 @@ from sklearn.decomposition import KernelPCA
 from sklearn.decomposition import PCA
 
 from mpl_toolkits.mplot3d import Axes3D
+
+
+import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.figure as fig
+
 
 class xyset_class:
 	
@@ -620,8 +625,8 @@ def addFeatureMain(xList, testXList):
 	# newTestXListFeature = addEnergyFearture(testXList, testLen)
 	
 	## add Row
-	#newXListFeature = addRowGreatN(xList, trainLen, 0)
-	#newTestXListFeature = addRowGreatN(testXList, testLen, 0)
+	newXListFeature = addRowGreatN(xList, trainLen, 0)
+	newTestXListFeature = addRowGreatN(testXList, testLen, 0)
 	#
 	### add Col
 	#newXListFeature = addColGreatN(xList, trainLen, 0)
@@ -631,11 +636,11 @@ def addFeatureMain(xList, testXList):
 	#newXListFeature = addRowGreatN_addN(xList, trainLen, 0)
 	#newTestXListFeature = addRowGreatN_addN(testXList, testLen, 0)	
 	
-	newXListFeature = addAreaMean(xList, trainLen)
-	newTestXListFeature = addAreaMean(testXList, testLen)	
+	#newXListFeature = addAreaMean(xList, trainLen)
+	#newTestXListFeature = addAreaMean(testXList, testLen)	
 	
-	print(newXListFeature[0])
-	print(newXListFeature[1])
+	#print(newXListFeature[0])
+	#print(newXListFeature[1])
 	
 	return newXListFeature, newTestXListFeature
 	
@@ -651,6 +656,83 @@ def outCSV(yList, outFile):
 		#spamwriter.writerow(['Spam', 'Lovely Spam', 'Wonderful Spam'])
 		#for y in yList:
 		#	fp.write(str(y)+"\n")
+
+def drawSVMParaFirgure(xList, yList):
+	'''
+	#here's our data to plot, all normal Python lists
+	x = [1, 2, 3, 4, 5]
+	y = [0.1, 0.2, 0.3, 0.4, 0.5]
+
+	intensity = [5, 10, 15, 20, 25,30, 35, 40, 45, 50,55, 60, 65, 70, 75,80, 85, 90, 95, 100,105, .01, 115, 120, 125]
+
+	#setup the 2D grid with Numpy
+	x, y = np.meshgrid(x, y)
+
+	#convert intensity (list of lists) to a numpy array for plotting
+	intensity = np.array(intensity).reshape((5, 5))
+	print(intensity)
+
+	#now just plug the data into pcolormesh, it's that easy!
+	plt.pcolormesh(x, y, intensity)
+	plt.colorbar() #need a colorbar to show the intensity scale
+	plt.show() #boom	
+	'''
+	gamma = 1e-9*4.5
+	gammaList = [ gamma*(10**powE) for powE in range(10)]
+	
+	C = 0.00001
+	CList = [ C*(10**powE) for powE in range(10)]
+	
+	print(gammaList)
+	print(CList)
+	
+	resultList = []
+	scoreList = []
+	decision_function = 'ovr'
+	for C in CList:
+		for gamma in gammaList:
+			clf_rbf = svm.SVC(decision_function_shape=decision_function, 	C=C, kernel='rbf',  			gamma=gamma)
+
+			#cross validation 
+			#print("rbf cross validation")
+			score_rbf = cross_validation.cross_val_score(clf_rbf, xList, yList, cv=3)
+			mean = score_rbf.mean()	
+			resultList.append({'C':C, 'gamme':gamma, 'score':mean})
+			scoreList.append(mean)
+	scoreList = np.array(scoreList)
+	
+	maxScore = 0
+	maxResult = []
+	for result in resultList:
+		score = result['score']
+		if maxScore < score:
+			maxScore = score
+			maxResult = result
+	print (maxScore, maxResult)
+	
+	x = gammaList
+	y = CList
+	
+	x = range(len(gammaList)+1)
+	y = range(len(CList)+1)
+	intensity = scoreList.reshape((len(gammaList), len(CList)))
+	
+	#print(x)
+	#print(y)
+	#print(intensity)
+	
+	#f1 = scoreList.reshape((6, 6))
+	#setup the 2D grid with Numpy
+	x, y = np.meshgrid(x, y)
+
+	plt.pcolormesh(x, y, intensity)
+	plt.colorbar() #need a colorbar to show the intensity scale
+	#plt.show() #boom	
+	
+	fig = matplotlib.pyplot.gcf()
+	fig.set_size_inches(10.5, 8.5)
+	fig.savefig("SVM_C_gamma.png", dpi=100)
+
 	
 def main(argc, argv):
 	trainSet = train_set_class()
@@ -667,9 +749,9 @@ def main(argc, argv):
 	print("Export data to list.")
 	xList, yList = trainSet.exportDataToXYList()
 	testXList, _testYList = testSet.exportDataToXYList()
-	print(len(testXList))
+	#print(len(testXList))
 	
-	pca_search = False
+	pca_search = True
 	
 	n_components = 55
 	
@@ -705,7 +787,8 @@ def main(argc, argv):
 		
 	
 	if pca_search == True:
-
+		#drawSVMParaFirgure(xList, yList)	
+		
 		#PCAParameterSearch(xList, yList)
 		PCAParameterSearch_addFeature(xList, yList, newXListFeatureList)
 		#showList(xList, yList)
