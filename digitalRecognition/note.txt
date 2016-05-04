@@ -5,3 +5,9 @@ AreaMeans
 
 add Col
 55 0.982452251003
+
+add Row
+55 0.982737955098
+
+add energy
+55 0.982428438077

@@ -490,7 +490,7 @@ def addNonZeroNumberFeature(xList, listLen):
 		for x in xList[idx]:
 			if x != 0:
 				num += 1
-		newFeature = [num]
+		newFeature = [[num]]
 	return newFeature
 
 #0.982333196577
@@ -613,20 +613,20 @@ def addFeatureMain(xList, testXList):
 	testLen  = len(testXList)
 
 	##add number of non-zero feature as feature 
-	#newXListFeature = addNonZeroNumberFeature(xList, trainLen)
-	#newTestXListFeature = addNonZeroNumberFeature(testXList, testLen)
+	newXListFeature = addNonZeroNumberFeature(xList, trainLen)
+	newTestXListFeature = addNonZeroNumberFeature(testXList, testLen)
 	
 	## number of feature that great than N
 	#newXListFeature = addGreatNNumberFeature(xList, 10)
 	#newTestXListFeature = addGreatNNumberFeature(testXList, 10)
 	
 	## add energy
-	# newXListFeature = addEnergyFearture(xList, trainLen)
-	# newTestXListFeature = addEnergyFearture(testXList, testLen)
+	#newXListFeature = addEnergyFearture(xList, trainLen)
+	#newTestXListFeature = addEnergyFearture(testXList, testLen)
 	
 	## add Row
-	newXListFeature = addRowGreatN(xList, trainLen, 0)
-	newTestXListFeature = addRowGreatN(testXList, testLen, 0)
+	#newXListFeature = addRowGreatN(xList, trainLen, 0)
+	#newTestXListFeature = addRowGreatN(testXList, testLen, 0)
 	#
 	### add Col
 	#newXListFeature = addColGreatN(xList, trainLen, 0)
